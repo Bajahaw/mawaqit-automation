@@ -49,7 +49,7 @@ def main():
         if next_prayer:
             # Calculate the time difference between now and the next prayer
             time_diff = (next_prayer - now).total_seconds()
-            print(f"Waiting {time_diff // 3600} hours and {(time_diff % 3600) // 60} mins for prayer at {next_prayer_str}...")
+            print(f"Waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {next_prayer_str}...")
             
             # Sleep to save resources
             time.sleep(time_diff)
@@ -60,7 +60,7 @@ def main():
                 content=f"It's time for prayer at {next_prayer_str}.",
                 image="https://example.com/prayer_image.png"  # Replace as needed
             )
-            
+
         else:
             # No upcoming prayer today; wait until midnight to check again
             print("No upcoming prayer today. Waiting until midnight...")
