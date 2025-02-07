@@ -38,8 +38,8 @@ Well, a touch of customization is missing in the Mawaqit app. e.g custom notific
 
 check out these sources:
 
-- [text](https://mawaqit.net/en/)
-- [text](https://mrsofiane.me/mawaqit-api/#/)
+- [Mawaqit](https://mawaqit.net/en/)
+- [mawaqit-api](https://mrsofiane.me/mawaqit-api/#/)
 
 ## License
 
