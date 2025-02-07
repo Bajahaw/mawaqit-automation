@@ -10,7 +10,12 @@ class NotificationManager:
             'termux-notification',
             '--title', title,
             '--content', content,
-            '--priority', 'high',
-            '--button1-text', 'View',
-            '--button1-action', f"termux-open-url {image}"
+            '--priority', 'low'
+        ])
+
+        # Play a notification sound
+        subprocess.run([
+            'termux-media-player',
+            'play',
+            '../resources/notification_sound.mp3'
         ])
