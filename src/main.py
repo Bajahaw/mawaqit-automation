@@ -25,9 +25,6 @@ def main():
     # Initialize the notification manager
     notification_manager = NotificationManager()
 
-    # print("-------------------------")
-    # print("New day, May it be blessed .. date: ", datetime.datetime.now().date())
-
     now = datetime.datetime.now()
     month = now.month - 1  # months are just 0-11 in the JSON data
     day_str = "{:d}".format(now.day)
@@ -38,6 +35,7 @@ def main():
     except KeyError:
         print(f"No data for today's date: month {now.month}, day {now.day}.")
         return
+
     # Find the next upcoming prayer time
     for prayer_time in prayer_times:
 
@@ -52,9 +50,16 @@ def main():
             time_diff = (next_prayer_time - now).total_seconds()
             print(f"Waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time}...")
             
-            # Sleep to save resources
+            # Set job to save resources
             schedule_next_job(time_diff)
 
+            if next_prayer_time == prayer_times[0]:
+                # Print a message at the start of a new day
+                print("-------------------------")
+                print("New day, May it be blessed .. date: ", datetime.datetime.now().date())
+
+        # if now is within the prayer time by 5 minutes, cuz scheduler might not be accurate
+        if now < next_prayer_time + datetime.timedelta(minutes=5) and now > next_prayer_time - datetime.timedelta(minutes=5):
             # Send a notification when it's time for prayer
             notification_manager.send_notification(
                 title="Prayer Time",
