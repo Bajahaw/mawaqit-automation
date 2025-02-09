@@ -12,7 +12,7 @@ def schedule_next_job(delay_seconds):
     subprocess.run([
         "termux-job-scheduler",
         "--job-id", "1",
-        "--deadline", str(deadline_ms),
+        "--period-ms", str(deadline_ms),
         "--script", os.path.join(os.path.dirname(__file__), "utils", "job.sh"),
         "--battery-not-low", "false"
     ])
