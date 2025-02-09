@@ -1,3 +1,5 @@
 #!/bin/bash
 
-python3 ../src/utils/main.py
+cd $(echo "$(dirname "$(realpath "$0")")")
+cd ..
+python3 main.py
