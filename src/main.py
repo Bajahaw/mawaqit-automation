@@ -1,6 +1,7 @@
 import os
 import time
 import datetime
+import subprocess
 from notify import NotificationManager
 from utils.parse_json import parse_json
 
@@ -12,7 +13,8 @@ def schedule_next_job(delay_seconds):
         "termux-job-scheduler",
         "--job-id", "1",
         "--deadline", str(deadline_ms),
-        "--script", os.path.join(os.path.dirname(os.path.dirname(__file__)), "utils", "job.sh")
+        "--script", os.path.join(os.path.dirname(__file__), "utils", "job.sh"),
+        "--battery-not-low", "false"
     ])
 
 def main():
