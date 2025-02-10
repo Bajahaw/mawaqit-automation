@@ -44,10 +44,18 @@ def main():
         # the date part is irrelevant, so we replace it with the current date
         next_prayer_time = datetime.datetime.combine(now.date(), prayer_parsed_time.time())
 
+        # if now is within the prayer time by 5 minutes, cuz scheduler might not be accurate
+        if now < next_prayer_time + datetime.timedelta(minutes=5) and now > next_prayer_time - datetime.timedelta(minutes=5):
+            # Send a notification when it's time for prayer
+            notification_manager.send_notification(
+                title="Prayer Time",
+                content=f"It's time for prayer at {prayer_time}."
+            )
+
         # Check if now is before the next prayer time
         if now < next_prayer_time:
             # Calculate the time difference between now and the next prayer
-            time_diff = (next_prayer_time - now).total_seconds()
+            time_diff = int((next_prayer_time - now).total_seconds())
             print(f"Waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time}...")
             
             # Set job to save resources
@@ -58,19 +66,12 @@ def main():
                 print("-------------------------")
                 print("New day, May it be blessed .. date: ", datetime.datetime.now().date())
 
-        # if now is within the prayer time by 5 minutes, cuz scheduler might not be accurate
-        if now < next_prayer_time + datetime.timedelta(minutes=5) and now > next_prayer_time - datetime.timedelta(minutes=5):
-            # Send a notification when it's time for prayer
-            notification_manager.send_notification(
-                title="Prayer Time",
-                content=f"It's time for prayer at {prayer_time}."
-            )
-
             break # Exit the loop after finding the next prayer time
 
-    # No upcoming prayer today; wait until midnight to check again
-    print("No upcoming prayer today. Waiting until midnight...")
-    schedule_next_job(60 * 60 * (24 - now.hour)) # Sleep until after midnight
+        elif next_prayer_time == prayer_times[4]:
+            # No upcoming prayer today; wait until midnight to check again
+            print("No upcoming prayer today. Waiting until midnight...")
+            schedule_next_job(60 * 60 * (24 - now.hour)) # Sleep until after midnight
             
 
 if __name__ == "__main__":
