@@ -3,7 +3,7 @@ class NotificationManager:
         # Initialize notification settings if needed
         pass
 
-    def send_notification(self, title, content, image):
+    def send_notification(self, title, content):
         # Implement notification logic using Termux API.
         import subprocess
         subprocess.run([
