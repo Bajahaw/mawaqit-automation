@@ -6,6 +6,21 @@ from notify import NotificationManager
 from utils.parse_json import parse_json
 
 def schedule_next_job(delay_seconds):
+
+    # first check if there is a pending job within the same time +- 5 seconds
+    result = subprocess.run([
+        "termux-job-scheduler",
+        "--pending"
+    ], capture_output=True).stdout.decode("utf-8")
+    
+    if "Pending Job 1" in result:
+        # extract the period from the result
+        period = int(result.split("periodic: ")[1].split("ms")[0])
+
+        # if the period is within the same time +- 5 seconds, then do nothing
+        if period - 5000 <= delay_seconds * 1000 <= period + 5000:
+            return
+
     # Convert seconds to milliseconds for the deadline
     deadline_ms = delay_seconds * 1000
     print(f"Scheduling next job in {int(delay_seconds // 3600)} hours and {int((delay_seconds % 3600) // 60)} mins.")
