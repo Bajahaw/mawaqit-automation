@@ -7,21 +7,21 @@ from utils.parse_json import parse_json
 
 def schedule_next_job(delay_seconds):
 
-    # first check if there is a pending job within the same time +- 5 seconds
+    # check if there is a pending job within plus or minus 5 seconds
     result = subprocess.run([
         "termux-job-scheduler",
         "--pending"
     ], capture_output=True).stdout.decode("utf-8")
     
     if "Pending Job 1" in result:
-        # extract the period from the result
+        # extract the period value from the result string
         period = int(result.split("periodic: ")[1].split("ms")[0])
 
-        # if the period is within the same time +- 5 seconds, then do nothing
+        # if the period is within plus or minus 5 seconds of the delay, do nothing
         if period - 5000 <= delay_seconds * 1000 <= period + 5000:
             return
 
-    # Convert seconds to milliseconds for the deadline
+    # convert seconds to milliseconds for the scheduling job
     deadline_ms = delay_seconds * 1000
     print(f"Scheduling next job in {int(delay_seconds // 3600)} hours and {int((delay_seconds % 3600) // 60)} mins.")
     subprocess.run([
@@ -33,60 +33,59 @@ def schedule_next_job(delay_seconds):
     ])
 
 def main():
-    # Build the path to the JSON file from the data directory which is in the parent directory
+    # build the json file path from the parent data directory
     json_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "huda-budapest.json")
     masjid_data = parse_json(json_file)["rawdata"]
     
-    # Initialize the notification manager
+    # init the notification manager to send alerts
     notification_manager = NotificationManager()
 
     now = datetime.datetime.now()
-    month = now.month - 1  # months are just 0-11 in the JSON data
+    month = now.month - 1  # note: months in the json are indexed 0-11
     day_str = "{:d}".format(now.day)
     
-    # Access the prayer times for today from JSON data
+    # get today's prayer times from the json data
     try:
         prayer_times = masjid_data["calendar"][month][day_str]
     except KeyError:
-        print(f"No data for today's date: month {now.month}, day {now.day}.")
-        return
+        print(f"no data for today's date: month {now.month}, day {now.day}.")
+        return 
 
-    # Find the next upcoming prayer time
+    # find the next prayer time
     for prayer_time in prayer_times:
 
-        # Parse the prayer time string into a datetime object
+        # parse the prayer time string into a datetime object and update to today's date
         prayer_parsed_time = datetime.datetime.strptime(prayer_time, "%H:%M")
-        # the date part is irrelevant, so we replace it with the current date
         next_prayer_time = datetime.datetime.combine(now.date(), prayer_parsed_time.time())
 
-        # if now is within the prayer time by 5 minutes, cuz scheduler might not be accurate
-        if now < next_prayer_time + datetime.timedelta(minutes=5) and now > next_prayer_time - datetime.timedelta(minutes=5):
-            # Send a notification when it's time for prayer
+        # if the current time is within 5 minutes of the prayer, due to scheduler imprecision, send a notification
+        if next_prayer_time + datetime.timedelta(minutes=5) > now > next_prayer_time - datetime.timedelta(minutes=5):
             notification_manager.send_notification(
-                title="Prayer Time",
-                content=f"It's time for prayer at {prayer_time}."
+                title="prayer time",
+                content=f"it's time for prayer at {prayer_time}."
             )
 
-        # Check if now is before the next prayer time
+        # check if the current time is before the prayer time
         if now < next_prayer_time:
-            # Calculate the time difference between now and the next prayer
+            # calculate the time diff to next prayer
             time_diff = int((next_prayer_time - now).total_seconds())
-            print(f"Waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time}...")
+            print(f"waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time}...")
             
-            # Set job to save resources
+            # schedule a job timer for the next prayer
             schedule_next_job(time_diff)
 
-            if next_prayer_time == prayer_times[0]:
-                # Print a message at the start of a new day
+            if next_prayer_time == datetime.datetime.combine(now.date(), datetime.datetime.strptime(prayer_times[0], "%H:%M").time()):
+                # at day's start, print a welcome message with today’s date
                 print("-------------------------")
-                print("New day, May it be blessed .. date: ", datetime.datetime.now().date())
+                print("new day, may it be blessed .. date: ", datetime.datetime.now().date())
 
-            break # Exit the loop after finding the next prayer time
+            # break after scheduling the next prayer
+            break
 
-        elif next_prayer_time == prayer_times[4]:
-            # No upcoming prayer today; wait until midnight to check again
-            print("No upcoming prayer today. Waiting until midnight...")
-            schedule_next_job(60 * 60 * (24 - now.hour)) # Sleep until after midnight
+        elif next_prayer_time == datetime.datetime.combine(now.date(), datetime.datetime.strptime(prayer_times[4], "%H:%M").time()):
+            # no more prayers today, wait until midnight
+            print("no upcoming prayer today. waiting until midnight...")
+            schedule_next_job(60 * 60 * (24 - now.hour))
             
 
 if __name__ == "__main__":
