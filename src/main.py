@@ -33,23 +33,6 @@ def schedule_next_job(delay_seconds):
     ])
 
 def main():
-    # build the json file path from the parent data directory
-    json_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "huda-budapest.json")
-    masjid_data = parse_json(json_file)["rawdata"]
-    
-    # init the notification manager to send alerts
-    notification_manager = NotificationManager()
-
-    now = datetime.datetime.strptime("18:50", "%H:%M")
-    month = 2 - 1  # note: months in the json are indexed 0-11
-    day_str = "18" #"{:d}".format(now.day)
-    
-    # get today's prayer times from the json data
-    try:
-        prayer_times = masjid_data["calendar"][month][day_str]
-    except KeyError:
-        print(f"no data for today's date: month {now.month}, day {now.day}.")
-        return 
 
     # lock file to prevent looping because of scheduler first run
     lock_file = os.path.join(os.path.dirname(__file__), "utils", "lock")
@@ -61,7 +44,25 @@ def main():
     else:
         with open(lock_file, "w") as f:
             f.write("lock")
+
+    # build the json file path from the parent data directory
+    json_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "huda-budapest.json")
+    masjid_data = parse_json(json_file)["rawdata"]
     
+    # init the notification manager to send alerts
+    notification_manager = NotificationManager()
+
+    now = datetime.datetime.now()
+    month = now.month - 1  # note: months in the json are indexed 0-11
+    day_str = "{:d}".format(now.day)
+    
+    # get today's prayer times from the json data
+    try:
+        prayer_times = masjid_data["calendar"][month][day_str]
+    except KeyError:
+        print(f"no data for today's date: month {now.month}, day {now.day}.")
+        return 
+
     # find the next prayer time
     for prayer_time in prayer_times:
 
