@@ -51,6 +51,17 @@ def main():
         print(f"no data for today's date: month {now.month}, day {now.day}.")
         return 
 
+    # lock file to prevent looping because of scheduler first run
+    lock_file = os.path.join(os.path.dirname(__file__), "utils", "lock")
+    if os.path.exists(lock_file):
+        os.remove(lock_file)
+        print("lock file removed.")
+        return
+
+    else:
+        with open(lock_file, "w") as f:
+            f.write("lock")
+    
     # find the next prayer time
     for prayer_time in prayer_times:
 
