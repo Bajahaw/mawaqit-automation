@@ -40,9 +40,9 @@ def main():
     # init the notification manager to send alerts
     notification_manager = NotificationManager()
 
-    now = datetime.datetime.now()
-    month = now.month - 1  # note: months in the json are indexed 0-11
-    day_str = "{:d}".format(now.day)
+    now = datetime.datetime.strptime("18:50", "%H:%M")
+    month = 2 - 1  # note: months in the json are indexed 0-11
+    day_str = "18" #"{:d}".format(now.day)
     
     # get today's prayer times from the json data
     try:
@@ -54,22 +54,18 @@ def main():
     # find the next prayer time
     for prayer_time in prayer_times:
 
+        print(f"next prayer time: {prayer_time}")
+
         # parse the prayer time string into a datetime object and update to today's date
         prayer_parsed_time = datetime.datetime.strptime(prayer_time, "%H:%M")
         next_prayer_time = datetime.datetime.combine(now.date(), prayer_parsed_time.time())
 
-        # if the current time is within 5 minutes of the prayer, due to scheduler imprecision, send a notification
-        if next_prayer_time + datetime.timedelta(minutes=5) > now > next_prayer_time - datetime.timedelta(minutes=5):
-            notification_manager.send_notification(
-                title="prayer time",
-                content=f"it's time for prayer at {prayer_time}."
-            )
 
         # check if the current time is before the prayer time
         if now < next_prayer_time:
             # calculate the time diff to next prayer
             time_diff = int((next_prayer_time - now).total_seconds())
-            print(f"waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time}...")
+            print(f"waiting {int(time_diff // 3600)} hours and {int((time_diff % 3600) // 60)} mins for prayer at {prayer_time} ...")
             
             # schedule a job timer for the next prayer
             schedule_next_job(time_diff)
@@ -82,11 +78,19 @@ def main():
             # break after scheduling the next prayer
             break
 
-        elif next_prayer_time == datetime.datetime.combine(now.date(), datetime.datetime.strptime(prayer_times[4], "%H:%M").time()):
+        elif next_prayer_time == datetime.datetime.combine(now.date(), datetime.datetime.strptime(prayer_times[5], "%H:%M").time()):
             # no more prayers today, wait until midnight
             print("no upcoming prayer today. waiting until midnight...")
             schedule_next_job(60 * 60 * (24 - now.hour))
+
+            break
             
+        # if the current time is within 2 minutes of the prayer, due to scheduler imprecision, send a notification
+        if next_prayer_time + datetime.timedelta(minutes=2) > now > next_prayer_time - datetime.timedelta(minutes=2):
+            notification_manager.send_notification(
+                title="prayer time",
+                content=f"it's time for prayer at {prayer_time}."
+            )
 
 if __name__ == "__main__":
     main()
