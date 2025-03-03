@@ -49,10 +49,14 @@ def main():
         print(f"no data for today's date: month {now.month}, day {now.day}.")
         return 
 
+    prayers = ["Fajr", "Shorouq", "Dhuhr", "Asr", "Maghrib", "Ishaa"]
+    prayer_index = 0
+
     # find the next prayer time
     for i in range(len(prayer_times)):
 
         prayer_time = prayer_times[i]
+        prayer_index = i
         # parse the prayer time string into a datetime object and update to today's date
         prayer_parsed_time = datetime.datetime.strptime(prayer_time, "%H:%M")
         next_prayer_time = datetime.datetime.combine(now.date(), prayer_parsed_time.time())
@@ -73,21 +77,23 @@ def main():
                 print("-------------------------")
                 print("new day, may it be blessed .. date: ", datetime.datetime.now().date())
 
-            else:
-                # send a notification for the upcoming prayer
-                notification_manager.send_notification(
-                    title="upcoming prayer",
-                    content=f"the next prayer is at {prayer_times[i-1]}."
-                )
-                print(f"notification sent: upcoming prayer at {prayer_times[i-1]}")
-
             # break after scheduling the next prayer
             break
 
         elif i == len(prayer_times) - 1: # Ishaa prayer
             # no more prayers today, wait until midnight
             print("no upcoming prayer today. waiting until midnight...")
+            prayer_index = i + 1
             schedule_next_job(60 * 60 * (24 - now.hour))
+        
+    prayer_index = prayer_index - 1
+    prayer_name = prayers[max(0, prayer_index)]
+    notification_manager.send_notification(
+        title="Prayer Time",
+        content=f"It is time for {prayer_name} prayer, at {prayer_times[max(0, prayer_index)]}"
+    )
+    print(f"notification sent: upcoming prayer at {prayer_times[i-1]}")
+
 
 if __name__ == "__main__":
     main()
